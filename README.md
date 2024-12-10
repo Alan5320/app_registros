@@ -26,8 +26,6 @@ Al menos un nombre
 * Requisitos de Python:
 Instale las dependencias necesarias ejecutando el siguiente comando:
 
-bash
-
 Copiar código
 
 pip install pandas openpyxl python-docx pywin32
@@ -38,8 +36,8 @@ Descargue el archivo Python del programa y colóquelo en la misma carpeta que lo
 * Ejecución:
 Ejecute el programa con el siguiente comando:
 
-bash
 Copiar código
+
 python <nombre_del_archivo>.py
 
 
