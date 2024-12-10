@@ -45,7 +45,7 @@ python <nombre_del_archivo>.py
 * Registrar un Documento:
 Ingrese los datos completos del documento en el cuadro de texto siguiendo el formato:
 
-<Documento> <Apellido1> <Apellido2> <Nombre1> <Sexo (M/F)> <Fecha de Nacimiento (AAAAMMDD)>
+Documento, Apellido1, Apellido2, Nombre1, Sexo (M/F), Fecha de Nacimiento (AAAAMMDD)
 
 - POR LO GENERAL AL ESCANEAR UN DOCUMENTO CON UN ESCANER ESTOS DATOS SE COLOCAN AUTOMATICAMENTE EN EL CUADRO DE TEXTO
 Haga clic en Enviar Documento para registrar y procesar los datos. Esto generará un archivo Word con los datos y lo enviará a la impresora.
