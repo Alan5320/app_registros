@@ -27,9 +27,12 @@ Al menos un nombre
 Instale las dependencias necesarias ejecutando el siguiente comando:
 
 bash
+
 Copiar código
+
 pip install pandas openpyxl python-docx pywin32
-Descargue el Código:
+
+* Descargue el Código:
 Descargue el archivo Python del programa y colóquelo en la misma carpeta que los archivos mencionados anteriormente (plantilla_fija.docx, documentos_registrados.xlsx, documentos_a_validar.xlsx).
 
 * Ejecución:
