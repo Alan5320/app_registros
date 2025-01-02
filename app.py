@@ -263,7 +263,7 @@ def iniciar_ventana_dinamica(campos_cedula, columnas_adicionales, campos_plantil
     button_bg = "#4caf50"
     button_fg = "#fff"
 
-    tk.Label(ventana_dinamica, text="Escanea los datos de la cédula", font=label_font, bg=label_bg, fg=label_fg).pack(pady=10)
+    tk.Label(ventana_dinamica, text="Escanea los datos del documento", font=label_font, bg=label_bg, fg=label_fg).pack(pady=10)
 
     input_text = tk.Text(ventana_dinamica, height=6, width=50, font=input_font, bg="#fff", fg="#000", bd=2, relief="solid")
     input_text.pack(pady=10, padx=20)
