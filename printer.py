@@ -15,6 +15,5 @@ def imprimir_documento(ruta_archivo):
         # Cerrar el documento sin guardar
         documento.Close(SaveChanges=False)
         word.Quit()
-        messagebox.showinfo(f"EXITOSO", f"El documento se envió a la impresora correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"¡Ups! Hubo un error al intentar imprimir: {e}")
