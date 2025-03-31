@@ -111,7 +111,7 @@ class DynamicWindow:
         style.configure('Highlight.TFrame', 
                 background=background_color,
                 borderwidth=2,
-                relief="solid")
+                relief="flat")
         
         style.configure('Error.TLabel', 
                 background=background_color, 
@@ -122,11 +122,6 @@ class DynamicWindow:
                 background="#E3F2FD", 
                 foreground=text_color, 
                 font=("Segoe UI", 12))
-        
-        style.configure('Highlight.TFrame', 
-                       background="#F0F2F5",
-                       borderwidth=2,
-                       relief="solid")
 
     def load_assets(self):
         try:
@@ -176,7 +171,7 @@ class DynamicWindow:
 
     def create_scanner_section(self, parent):
         scanner_frame = ttk.LabelFrame(parent, 
-                                      text=" Escaneo de Documento ",
+                                      text=" ESCANEO DE DOCUMENTOOS ",
                                       padding=15,
                                       style='Highlight.TFrame')
         scanner_frame.pack(fill='x', pady=10)
@@ -186,7 +181,7 @@ class DynamicWindow:
                                  wrap='word',
                                  font=("Consolas", 10),
                                  bg="white",
-                                 relief="solid",
+                                 relief="flat",
                                  borderwidth=1,
                                  padx=10,
                                  pady=15)
@@ -195,14 +190,14 @@ class DynamicWindow:
         # Add a label for instructions
         instruction_label = ttk.Label(scanner_frame, 
                                       text="Por favor, escanee el documento en el área de texto.",
-                                      font=("Segoe UI", 10, "italic"),
+                                      font=("Segoe UI", 12, "italic"),
                                       foreground="#2D3436")
         instruction_label.pack(pady=(5, 0))
 
     def create_additional_fields(self, parent):
         fields_frame = ttk.LabelFrame(parent, 
-                                     text=" Campos Adicionales ",
-                                     padding=10,
+                                     text=" CAMPOS ADICIONALES ",
+                                     padding=15,
                                      style='Highlight.TFrame')
         fields_frame.pack(fill='x', pady=10)
         
