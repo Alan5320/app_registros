@@ -171,7 +171,7 @@ class DynamicWindow:
 
     def create_scanner_section(self, parent):
         scanner_frame = ttk.LabelFrame(parent, 
-                                      text=" ESCANEO DE DOCUMENTOOS ",
+                                      text=" ESCANEO DE DOCUMENTOS ",
                                       padding=15,
                                       style='Highlight.TFrame')
         scanner_frame.pack(fill='x', pady=10)
