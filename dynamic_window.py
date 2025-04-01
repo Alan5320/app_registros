@@ -2,13 +2,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 import pandas as pd
-import tkinter as tk
-from tkinter import ttk, messagebox
-import pandas as pd
-from PIL import Image, ImageTk
 import sticker as sticker
 import printer as printer
 from pathlib import Path
+from datetime import datetime
 
 class ProcesadorDatos:
     @staticmethod
@@ -40,6 +37,15 @@ class ProcesadorDatos:
         fecha_nacimiento = resto[0] if len(resto) > 0 else ""
         rh = resto[1] if len(resto) > 1 else ""
 
+        # Convertir fecha de nacimiento a formato AAAA-MM-DD
+        try:
+            if '-' in fecha_nacimiento:
+                fecha_nacimiento = datetime.strptime(fecha_nacimiento, "%Y-%m-%d").strftime("%Y-%m-%d")
+            else:
+                fecha_nacimiento = datetime.strptime(fecha_nacimiento, "%Y%m%d").strftime("%Y-%m-%d")
+        except ValueError:
+            fecha_nacimiento = "Formato invalido"
+
         return {
             "DOCUMENTO": documento,
             "APELLIDOS": f"{primer_apellido} {segundo_apellido}",
@@ -66,7 +72,7 @@ class DynamicWindow:
 
     def configure_window(self):
         self.ventana.title(f"⭐ Registros - {self.evento_nombre}")
-        self.ventana.geometry("800x640")
+        self.ventana.geometry("820x660")
         self.ventana.configure(bg="#F0F2F5")
         self.ventana.resizable(True, True)
         
@@ -81,6 +87,18 @@ class DynamicWindow:
         text_color = "#2D3436"
         accent_color = "#FFC107"
         error_color = "#D32F2F"
+
+        # Añade este nuevo estilo para LabelFrame sin fondo ni borde
+        style.configure('Clean.TLabelframe', 
+                    background='#F0F2F5',
+                    bordercolor='#F0F2F5',  
+                    labelmargins=0,      
+                    relief='flat')       
+        
+        style.configure('Clean.TLabelframe.Label', 
+                    background='#F0F2F5', 
+                    foreground='#333',     
+                    font=('Arial', 12, 'italic')) 
 
         style.configure('TFrame', background=background_color)
         style.configure('TLabel', 
@@ -171,52 +189,106 @@ class DynamicWindow:
 
     def create_scanner_section(self, parent):
         scanner_frame = ttk.LabelFrame(parent, 
-                                      text=" ESCANEO DE DOCUMENTOS ",
-                                      padding=15,
-                                      style='Highlight.TFrame')
-        scanner_frame.pack(fill='x', pady=10)
+                                      text=" Sección de Escaneo de Datos ",
+                                      padding=5,
+                                      style='Clean.TLabelframe')
+        scanner_frame.pack(fill='x', pady=5)
+
+        # Texto de indicacion
+        indicacion_label = ttk.Label(scanner_frame, 
+                                text="El asterico (*) Significa que son Campos obligatorios",
+                                font=("Segoe UI", 12, "italic"),
+                                foreground="#666666")
+        indicacion_label.pack(pady=(5))
+
+        # Sección de formato esperado
+        format_frame = ttk.Frame(scanner_frame)
+        format_frame.pack(fill='x', pady=(0, 10))
         
+        # Etiquetas de campos en orden
+        campos = [
+            ("* DOCUMENTO", "#B3E5FC"),
+            ("* APELLIDOS", "#F0F4C3"),
+            ("* NOMBRES", "#C5CAE9"),
+            ("* SEXO (M ó F)", "#FFCDD2"),
+            ("* F. NACIMIENTO", "#BBDEFB"),
+            ("RH", "#FFCDD2")
+        ]
+        
+        for texto, color in campos:
+            lbl = ttk.Label(format_frame, 
+                           text=texto,
+                           font=("Segoe UI", 8, "bold"),
+                           background=color,
+                           padding=(5, 2),
+                           anchor='center')
+            lbl.pack(side='left', expand=True, fill='x', padx=0)
+
+        # Área de texto con placeholder
         self.input_text = tk.Text(scanner_frame, 
                                  height=4,
                                  wrap='word',
-                                 font=("Consolas", 10),
+                                 font=("Consolas", 12),
                                  bg="white",
                                  relief="flat",
                                  borderwidth=1,
                                  padx=10,
-                                 pady=15)
+                                 pady=15,
+                                 fg='#666666')
         self.input_text.pack(fill='x', expand=True)
-                
-        # Add a label for instructions
-        instruction_label = ttk.Label(scanner_frame, 
-                                      text="Por favor, escanee el documento en el área de texto.",
-                                      font=("Segoe UI", 12, "italic"),
-                                      foreground="#2D3436")
-        instruction_label.pack(pady=(5, 0))
+        self.input_text.insert('1.0', "Ingrese los datos en el orden mostrado arriba...")
+        
+        # Configurar eventos para el placeholder
+        self.input_text.bind('<FocusIn>', self.clear_placeholder)
+        self.input_text.bind('<FocusOut>', self.restore_placeholder)
+        self.input_text.bind('<Return>', lambda e: "break") 
+
+        # Texto de ejemplo
+        ejemplo_label = ttk.Label(scanner_frame, 
+                                text="- EJEMPLO - 1234567890 PEREZ GOMEZ JUAN DAVID M 1990-06-27 A+",
+                                font=("Segoe UI", 12, "italic"),
+                                foreground="#666666")
+        ejemplo_label.pack(pady=(5))
+
+    def clear_placeholder(self, event):
+        if self.input_text.get("1.0", "end-1c") == "Ingrese los datos en el orden mostrado arriba...":
+            self.input_text.delete("1.0", "end")
+            self.input_text.config(fg='black')
+
+    def restore_placeholder(self, event):
+        if not self.input_text.get("1.0", "end-1c").strip():
+            self.input_text.insert('1.0', "Ingrese los datos en el orden mostrado arriba...")
+            self.input_text.config(fg='#666666')
+
 
     def create_additional_fields(self, parent):
         fields_frame = ttk.LabelFrame(parent, 
-                                     text=" CAMPOS ADICIONALES ",
-                                     padding=15,
-                                     style='Highlight.TFrame')
-        fields_frame.pack(fill='x', pady=10)
+                                     text=" Sección de Campos Adicionales ",
+                                     padding=10,
+                                     style='Clean.TLabelframe')
+        fields_frame.pack(fill='x', pady=0)
         
         grid_frame = ttk.Frame(fields_frame)
         grid_frame.pack(fill='x', expand=True)
         
+        # Calcular el nro de columnas
+        nro_columnas = 2 if len(self.columnas_adicionales) > 1 else 1
+        
         for i, columna in enumerate(self.columnas_adicionales):
+            col = i % nro_columnas
+            row = i // nro_columnas
             ttk.Label(grid_frame, 
                      text=f"{columna.upper()}:",
                      font=("Segoe UI", 10, "bold")).grid(
-                         row=i, column=0, 
+                         row=row, column=col*2, 
                          padx=5, pady=3, sticky='e')
             
             entry = ttk.Entry(grid_frame, style='Input.TEntry')
-            entry.grid(row=i, column=1, 
+            entry.grid(row=row, column=col*2+1, 
                       padx=5, pady=3, sticky='ew')
             self.entradas_adicionales.append(entry)
             
-            grid_frame.columnconfigure(1, weight=1)
+            grid_frame.columnconfigure(col*2+1, weight=1)
 
     def create_action_buttons(self, parent):
         btn_container = ttk.Frame(parent)
@@ -236,7 +308,7 @@ class DynamicWindow:
             btn.pack(side='left', padx=5, expand=True)
 
     def setup_bindings(self):
-        self.ventana.bind('<Return>', lambda e: self.guardar_datos())
+        # self.ventana.bind('<Return>', lambda e: self.guardar_datos())
         self.input_text.bind('<Control-a>', self.select_all_text)
 
     def select_all_text(self, event):
@@ -333,12 +405,3 @@ class DynamicWindow:
         if messagebox.askyesno("Confirmar", "¿Está seguro de cerrar el evento?"):
             self.ventana.quit()
             self.ventana.destroy()
-
-if __name__ == "__main__":
-    campos_cedula = ["DOCUMENTO", "APELLIDOS", "NOMBRES", "SEXO", "FECHA DE NACIMIENTO", "RH"]
-    columnas_adicionales = ["EMAIL", "TELÉFONO"]
-    campos_plantilla = ["DOCUMENTO", "APELLIDOS", "NOMBRES"]
-    path_database = "bd_evento.xlsx"
-    evento_nombre = "Evento de Prueba"
-    
-    app = DynamicWindow(campos_cedula, columnas_adicionales, campos_plantilla, path_database, evento_nombre)
