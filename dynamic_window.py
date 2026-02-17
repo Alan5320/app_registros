@@ -56,12 +56,13 @@ class ProcesadorDatos:
         }
 
 class DynamicWindow:
-    def __init__(self, campos_cedula, columnas_adicionales, campos_plantilla, path_database, evento_nombre):
+    def __init__(self, campos_cedula, columnas_adicionales, campos_plantilla, path_database, evento_nombre, imprimir_con_titulos):
         self.campos_cedula = campos_cedula
         self.columnas_adicionales = columnas_adicionales
         self.campos_plantilla = campos_plantilla
         self.path_database = path_database
         self.evento_nombre = evento_nombre
+        self.imprimir_con_titulos = imprimir_con_titulos
         
         self.ventana = tk.Tk()
         self.configure_window()
@@ -339,7 +340,7 @@ class DynamicWindow:
             registro = self.generar_registro(datos_cedula)
             self.guardar_en_excel(registro)
             
-            self.generar_sticker(registro)
+            self.generar_sticker(registro, self.imprimir_con_titulos)
 
             ruta_base = Path(__file__).parent if "__file__" in locals() else Path.cwd()
             ruta_salida_word = ruta_base / "sticker_a_imprimir.docx"
@@ -380,6 +381,9 @@ class DynamicWindow:
         return registro
 
     def guardar_en_excel(self, registro):
+        # Poner como String todos los campos para evitar problemas de formato en Excel
+        for key in registro:
+            registro[key] = str(registro[key])
         try:
             df = pd.read_excel(self.path_database)
         except FileNotFoundError:
@@ -388,9 +392,9 @@ class DynamicWindow:
         df = pd.concat([df, pd.DataFrame([registro])], ignore_index=True)
         df.to_excel(self.path_database, index=False)
 
-    def generar_sticker(self, registro):
+    def generar_sticker(self, registro, imprimir_con_titulos):
         datos_plantilla = {campo: registro[campo] for campo in self.campos_plantilla if campo in registro}
-        sticker.crear_documento(datos_plantilla)
+        sticker.crear_documento(datos_plantilla, imprimir_con_titulos)
 
     def imprimir_sticker(self, ruta_salida_word):
         printer.imprimir_documento(str(ruta_salida_word))
