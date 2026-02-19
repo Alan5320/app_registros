@@ -71,20 +71,21 @@ def crear_documento(datos_json, imprimir_con_titulos):
         alto_pagina = seccion.page_height
 
         # * --- Ajuste dinámico de márgenes y fuentes según tamaño de página y cantidad de datos ---
-        # ----------------------------- Tamaño (10x6) -----------------------------
-        if ancho_pagina > Cm(10) and alto_pagina > Cm(6):
 
-            # Ajuste dinámico de márgenes para 10x6 según cantidad de datos
+        # ----------------------------- Tamaño (8X6) -----------------------------
+        if ancho_pagina > Cm(8) and alto_pagina > Cm(6):
+
+            # Ajuste dinámico de márgenes para 8X6 según cantidad de datos
             margen_superior = {
-                1: Cm(1.8), 2: Cm(1.5), 3: Cm(1.5), 4: Cm(1.3),
+                1: Cm(2), 2: Cm(1.8), 3: Cm(1.6), 4: Cm(1.4),
             }.get(cantidad_datos, Cm(1.1)) # * Para +5 elementos
 
-            # * --- Ajustar márgenes para 10x6 ---
+            # * --- Ajustar márgenes para 8X6 ---
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
 
-            # Ajuste dinámico de tamaños de fuente para 10x6 según cantidad de datos
+            # Ajuste dinámico de tamaños de fuente para 8X6 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(22), Pt(22)),
                 2: (Pt(20), Pt(17)),
@@ -92,14 +93,41 @@ def crear_documento(datos_json, imprimir_con_titulos):
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
             }
-            # * --- Ajustar tamaño de fuente para 10x6 ---
+            # * --- Ajustar tamaño de fuente para 8X6 ---
+            if cantidad_datos >= 6:
+                tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
+            else:
+                tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
+
+        # ----------------------------- Tamaño (10x5) -----------------------------
+        elif ancho_pagina > Cm(10) and alto_pagina > Cm(5):
+
+            # Ajuste dinámico de márgenes para 10x5 según cantidad de datos
+            margen_superior = {
+                1: Cm(1.6), 2: Cm(1.4), 3: Cm(1.2), 4: Cm(1),
+            }.get(cantidad_datos, Cm(1.1)) # * Para +5 elementos
+
+            # * --- Ajustar márgenes para 10x5 ---
+            for section in doc.sections:
+                section.top_margin = margen_superior
+                section.bottom_margin = Cm(0.2)
+
+            # Ajuste dinámico de tamaños de fuente para 10x5 según cantidad de datos
+            ajustes_fuente = {
+                1: (Pt(22), Pt(22)),
+                2: (Pt(20), Pt(17)),
+                3: (Pt(18), Pt(15)),
+                4: (Pt(17), Pt(14)),
+                5: (Pt(16), Pt(13)),
+            }
+            # * --- Ajustar tamaño de fuente para 10x5 ---
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
         # ----------------------------- Tamaño (5x3) -----------------------------
-        elif ancho_pagina > Cm(5) and alto_pagina > Cm(3):
+        elif ancho_pagina > Cm(6) and alto_pagina > Cm(3):
 
             # Ajuste dinámico de márgenes para 5x3 según cantidad de datos
             margen_superior = {
