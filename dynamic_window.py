@@ -148,6 +148,7 @@ class DynamicWindow:
             self.logo_tk = ImageTk.PhotoImage(self.logo_img)
             self.ventana.iconbitmap("_internal/logo2.ico")
         except Exception as e:
+            self.logo_tk = None
             print("Error cargando recursos:", str(e))
 
     def create_widgets(self):

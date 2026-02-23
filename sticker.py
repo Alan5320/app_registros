@@ -72,7 +72,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
         # * --- Ajuste dinámico de márgenes y fuentes según tamaño de página y cantidad de datos ---
 
-        # ----------------------------- Tamaño (8X6) -----------------------------
+        # ToDo: ----------------------------- Tamaño (8X6) -----------------------------
         if ancho_pagina > Cm(8) and alto_pagina > Cm(6):
 
             # Ajuste dinámico de márgenes para 8X6 según cantidad de datos
@@ -99,7 +99,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
-        # ----------------------------- Tamaño (10x5) -----------------------------
+        # ToDo: ----------------------------- Tamaño (10x5) -----------------------------
         elif ancho_pagina > Cm(10) and alto_pagina > Cm(5):
 
             # Ajuste dinámico de márgenes para 10x5 según cantidad de datos
@@ -131,7 +131,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
             # Ajuste dinámico de márgenes para 6x3 según cantidad de datos
             margen_superior = {
-                1: Cm(0.8), 2: Cm(0.7), 3: Cm(0.6), 4: Cm(0.5),
+                1: Cm(0.8), 2: Cm(0.7), 3: Cm(0.6), 4: Cm(0.4),
             }.get(cantidad_datos, Cm(0.4)) # * Para +5 elementos
 
             # * --- Ajustar márgenes para 6x3 ---
@@ -141,11 +141,11 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
             # Ajuste dinámico de tamaños de fuente para 6x3 según cantidad de datos
             ajustes_fuente = {
-                1: (Pt(14), Pt(12)),
-                2: (Pt(13), Pt(11)),
-                3: (Pt(12), Pt(10)),
-                4: (Pt(11), Pt(9)),
-                5: (Pt(10), Pt(8)),
+                1: (Pt(16), Pt(14)),
+                2: (Pt(15), Pt(13)),
+                3: (Pt(14), Pt(12)),
+                4: (Pt(13), Pt(11)),
+                5: (Pt(11), Pt(9)),
             }
 
             # * --- Ajustar tamaño de fuente para 6x3 ---
