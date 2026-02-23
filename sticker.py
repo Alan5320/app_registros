@@ -59,8 +59,8 @@ def crear_documento(datos_json, imprimir_con_titulos):
         for section in doc.sections:
             section.top_margin = Cm(0)
             section.bottom_margin = Cm(0)
-            section.left_margin = Cm(0)
-            section.right_margin = Cm(0)
+            section.left_margin = Cm(0.4)
+            section.right_margin = Cm(0.4)
 
         # Ajustar márgenes según cantidad de datos (usa copia "datos")
         cantidad_datos = len(datos)
@@ -126,20 +126,20 @@ def crear_documento(datos_json, imprimir_con_titulos):
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
-        # ----------------------------- Tamaño (5x3) -----------------------------
+        # ----------------------------- Tamaño (6x3) -----------------------------
         elif ancho_pagina > Cm(6) and alto_pagina > Cm(3):
 
-            # Ajuste dinámico de márgenes para 5x3 según cantidad de datos
+            # Ajuste dinámico de márgenes para 6x3 según cantidad de datos
             margen_superior = {
                 1: Cm(0.8), 2: Cm(0.7), 3: Cm(0.6), 4: Cm(0.5),
             }.get(cantidad_datos, Cm(0.4)) # * Para +5 elementos
 
-            # * --- Ajustar márgenes para 5x3 ---
+            # * --- Ajustar márgenes para 6x3 ---
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.1)
 
-            # Ajuste dinámico de tamaños de fuente para 5x3 según cantidad de datos
+            # Ajuste dinámico de tamaños de fuente para 6x3 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(14), Pt(12)),
                 2: (Pt(13), Pt(11)),
@@ -148,7 +148,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
                 5: (Pt(10), Pt(8)),
             }
 
-            # * --- Ajustar tamaño de fuente para 5x3 ---
+            # * --- Ajustar tamaño de fuente para 6x3 ---
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(9), Pt(7))
             else:
