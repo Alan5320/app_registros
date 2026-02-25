@@ -50,10 +50,10 @@ def crear_documento(datos_json, imprimir_con_titulos):
         # Cargar plantilla
         doc = Document(ruta_plantilla)
 
-        #  Evitar herencia rara: tamaño de fuente 0 a todo.
+        #  Evitar herencia rara: tamaño de fuente 1 a todo.
         for paragraph in doc.paragraphs:
             for run in paragraph.runs:
-                run.font.size = Pt(0)
+                run.font.size = Pt(1)
 
         # Poner márgenes a 0 para evitar herencia de estilos no deseados
         for section in doc.sections:
@@ -71,8 +71,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
         alto_pagina = seccion.page_height
 
         # * --- Ajuste dinámico de márgenes y fuentes según tamaño de página y cantidad de datos ---
-
-        # ToDo: ----------------------------- Tamaño (8X6) -----------------------------
+        # ? ----------------------------- Tamaño (8X6) -----------------------------
         if ancho_pagina > Cm(8) and alto_pagina > Cm(6):
 
             # Ajuste dinámico de márgenes para 8X6 según cantidad de datos
@@ -87,7 +86,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
             # Ajuste dinámico de tamaños de fuente para 8X6 según cantidad de datos
             ajustes_fuente = {
-                1: (Pt(22), Pt(22)),
+                1: (Pt(24), Pt(24)),
                 2: (Pt(20), Pt(17)),
                 3: (Pt(18), Pt(15)),
                 4: (Pt(17), Pt(14)),
@@ -99,13 +98,13 @@ def crear_documento(datos_json, imprimir_con_titulos):
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
-        # ToDo: ----------------------------- Tamaño (10x5) -----------------------------
+        # ? ----------------------------- Tamaño (10x5) -----------------------------
         elif ancho_pagina > Cm(10) and alto_pagina > Cm(5):
 
             # Ajuste dinámico de márgenes para 10x5 según cantidad de datos
             margen_superior = {
-                1: Cm(1.6), 2: Cm(1.4), 3: Cm(1.2), 4: Cm(1),
-            }.get(cantidad_datos, Cm(1.1)) # * Para +5 elementos
+                1: Cm(1.4), 2: Cm(1.3), 3: Cm(1.2), 4: Cm(1),
+            }.get(cantidad_datos, Cm(0.8)) # * Para +5 elementos
 
             # * --- Ajustar márgenes para 10x5 ---
             for section in doc.sections:
@@ -114,9 +113,9 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
             # Ajuste dinámico de tamaños de fuente para 10x5 según cantidad de datos
             ajustes_fuente = {
-                1: (Pt(22), Pt(22)),
+                1: (Pt(24), Pt(24)),
                 2: (Pt(20), Pt(17)),
-                3: (Pt(18), Pt(15)),
+                3: (Pt(18.5), Pt(15.5)),
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
             }
@@ -126,7 +125,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
-        # ----------------------------- Tamaño (6x3) -----------------------------
+        # ? ----------------------------- Tamaño (6x3) -----------------------------
         elif ancho_pagina > Cm(6) and alto_pagina > Cm(3):
 
             # Ajuste dinámico de márgenes para 6x3 según cantidad de datos
@@ -142,10 +141,10 @@ def crear_documento(datos_json, imprimir_con_titulos):
             # Ajuste dinámico de tamaños de fuente para 6x3 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(16), Pt(14)),
-                2: (Pt(15), Pt(13)),
-                3: (Pt(14), Pt(12)),
-                4: (Pt(13), Pt(11)),
-                5: (Pt(11), Pt(9)),
+                2: (Pt(14), Pt(13)),
+                3: (Pt(13), Pt(12)),
+                4: (Pt(12), Pt(11)),
+                5: (Pt(11), Pt(10)),
             }
 
             # * --- Ajustar tamaño de fuente para 6x3 ---
@@ -179,7 +178,15 @@ def crear_documento(datos_json, imprimir_con_titulos):
         formato_parrafo.space_before = Pt(0)
         formato_parrafo.space_after = Pt(0)
 
-        def agregar_linea(parrafo, clave, valor):
+        # --- Orden específico primero + resto ---
+        items = []
+        for clave in ["APELLIDOS", "DOCUMENTO"]:
+            if clave in datos:
+                items.append((clave, datos.pop(clave)))
+
+        items.extend(list(datos.items()))
+
+        def agregar_linea(parrafo, clave, valor, poner_salto):
             if imprimir_con_titulos:
                 run_clave = parrafo.add_run(f"{clave}: ")
                 run_clave.bold = True
@@ -191,20 +198,14 @@ def crear_documento(datos_json, imprimir_con_titulos):
                 run_valor = parrafo.add_run(str(valor))
                 run_valor.font.size = tamaño_fuente_general
 
-            parrafo.add_run("\n")  # salto de línea controlado
+            if poner_salto:
+                parrafo.add_run().add_break()
 
-        # Orden específico primero
-        for clave in ["APELLIDOS", "DOCUMENTO"]:
-            if clave in datos:
-                valor = datos.pop(clave)
-                agregar_linea(parrafo, clave, valor)
-
-        # Luego el resto de campos
-        for clave, valor in datos.items():
-            agregar_linea(parrafo, clave, valor)
+        for i, (clave, valor) in enumerate(items):
+            agregar_linea(parrafo, clave, valor, poner_salto=(i < len(items) - 1))    
 
         # Limpieza final: si se quedó algún párrafo vacío, lo removemos
-        # (pero si Word lo re-crea, al menos ya no hay \n extra generado por nosotros).
+        # (pero si Word lo re-crea, al menos ya no hay \n extra generado).
         for p in list(doc.paragraphs):
             if not p.text.strip() and len(doc.paragraphs) > 1:
                 _remove_paragraph(p)
@@ -227,4 +228,11 @@ def crear_documento(datos_json, imprimir_con_titulos):
             "Error crítico",
             f"Error inesperado: {str(e)}\nDetalles en la consola."
         )
-        return False
+        feat: agregar generador de stickers con ajuste dinámico de márgenes y fuentes
+
+        - Implementar función crear_documento() para generar stickers desde datos JSON
+        - Ajuste dinámico de márgenes y tamaños de fuente según dimensiones de página (8x6, 10x5, 6x3)
+        - Soporte para cantidad variable de datos con escalado automático
+        - Manejo robusto de rutas y validación de archivos en uso
+        - Opción para imprimir con títulos de campos
+        - Limpieza de párrafos vacíos y gestión correcta de encoding para archivos .docx
