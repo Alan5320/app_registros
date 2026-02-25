@@ -228,11 +228,4 @@ def crear_documento(datos_json, imprimir_con_titulos):
             "Error crítico",
             f"Error inesperado: {str(e)}\nDetalles en la consola."
         )
-        feat: agregar generador de stickers con ajuste dinámico de márgenes y fuentes
-
-        - Implementar función crear_documento() para generar stickers desde datos JSON
-        - Ajuste dinámico de márgenes y tamaños de fuente según dimensiones de página (8x6, 10x5, 6x3)
-        - Soporte para cantidad variable de datos con escalado automático
-        - Manejo robusto de rutas y validación de archivos en uso
-        - Opción para imprimir con títulos de campos
-        - Limpieza de párrafos vacíos y gestión correcta de encoding para archivos .docx
+        return False
