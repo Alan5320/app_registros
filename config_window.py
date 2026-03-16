@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
+import re
 from config_plantilla import ConfiguradorPlantilla
 
 class ConfiguradorEvento:
@@ -199,7 +200,8 @@ class ConfiguradorEvento:
         widget.config(foreground="red")
 
     def guardar_configuracion(self):
-        self.path_database = f"bd_evento_{self.evento_nombre}.xlsx"
+        nombre_archivo = re.sub(r"[^\w\- ]", "", self.evento_nombre).strip().replace(" ", "_")
+        self.path_database = f"bd_evento_{nombre_archivo}.xlsx"
         self.ventana_config.destroy()
         ConfiguradorPlantilla(self.campos_seleccionados, self.columnas_adicionales, self.path_database, self.evento_nombre)
 

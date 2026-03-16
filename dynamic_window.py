@@ -24,16 +24,18 @@ class ProcesadorDatos:
 
         # Los nombres están entre el segundo apellido y el sexo (M/F)
         nombres = []
-        for parte in partes[3:]:
-            if parte in ("M", "F"):
-                sexo = parte
+        sexo_index = None
+        for idx, parte in enumerate(partes[3:], start=3):
+            if parte.upper() in ("M", "F"):
+                sexo = parte.upper()
+                sexo_index = idx
                 break
             nombres.append(parte)
         else:
             raise ValueError("No se encontró el campo sexo en los datos escaneados.")
 
         # Fecha de nacimiento y RH están después del sexo
-        resto = partes[partes.index(sexo) + 1:]
+        resto = partes[sexo_index + 1:]
         fecha_nacimiento = resto[0] if len(resto) > 0 else ""
         rh = resto[1] if len(resto) > 1 else ""
 
@@ -187,7 +189,7 @@ class DynamicWindow:
                    background="#F0F2F5",
                    foreground="#2D3436",
                    padding=(10, 5))
-        self.status_bar.pack(fill='y', pady=(0, 10))
+        self.status_bar.pack(fill='x', pady=(0, 10))
 
     def create_scanner_section(self, parent):
         scanner_frame = ttk.LabelFrame(parent, 
@@ -334,10 +336,13 @@ class DynamicWindow:
     def guardar_datos_e_imprimir(self):
         try:
             raw_data = self.input_text.get("1.0", tk.END).strip()
-            if not raw_data:
-                raise ValueError("No se han ingresado datos")
+            if not raw_data or raw_data == "Ingrese los datos en el orden mostrado arriba...":
+                raise ValueError("No se han ingresado datos válidos")
                 
             datos_cedula = ProcesadorDatos.procesar_datos_escaneados(raw_data)
+            if self.documento_ya_registrado(datos_cedula["DOCUMENTO"]):
+                raise ValueError("El documento ya está registrado para este evento")
+
             registro = self.generar_registro(datos_cedula)
             self.guardar_en_excel(registro)
             
@@ -360,10 +365,13 @@ class DynamicWindow:
     def guardar_datos(self):
         try:
             raw_data = self.input_text.get("1.0", tk.END).strip()
-            if not raw_data:
-                raise ValueError("No se han ingresado datos")
+            if not raw_data or raw_data == "Ingrese los datos en el orden mostrado arriba...":
+                raise ValueError("No se han ingresado datos válidos")
                 
             datos_cedula = ProcesadorDatos.procesar_datos_escaneados(raw_data)
+            if self.documento_ya_registrado(datos_cedula["DOCUMENTO"]):
+                raise ValueError("El documento ya está registrado para este evento")
+
             registro = self.generar_registro(datos_cedula)
             self.guardar_en_excel(registro)
 
@@ -380,6 +388,22 @@ class DynamicWindow:
         for columna, entrada in zip(self.columnas_adicionales, self.entradas_adicionales):
             registro[columna] = entrada.get()
         return registro
+
+
+    def documento_ya_registrado(self, documento):
+        if not Path(self.path_database).exists():
+            return False
+
+        try:
+            df = pd.read_excel(self.path_database, dtype=str)
+        except Exception:
+            return False
+
+        if "DOCUMENTO" not in df.columns:
+            return False
+
+        documentos = df["DOCUMENTO"].astype(str).str.strip()
+        return documento.strip() in set(documentos)
 
     def guardar_en_excel(self, registro):
         # Poner como String todos los campos para evitar problemas de formato en Excel
