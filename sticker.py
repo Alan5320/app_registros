@@ -4,6 +4,33 @@ from docx.shared import Pt, Cm
 from tkinter import messagebox
 import traceback
 from pathlib import Path
+import io
+import qrcode
+from qrcode.constants import ERROR_CORRECT_M
+
+
+def crear_qr_buffer(texto: str):
+    """
+    Genera un QR en memoria y devuelve un BytesIO listo para insertarse en Word.
+    """
+    if not texto:
+        raise ValueError("El texto para el QR está vacío")
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=ERROR_CORRECT_M,
+        box_size=12,
+        border=1,
+    )
+    qr.add_data(texto)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
+
 
 def _remove_paragraph(paragraph):
     """Elimina un párrafo del documento (uso interno)."""
@@ -11,18 +38,51 @@ def _remove_paragraph(paragraph):
     p.getparent().remove(p)
     paragraph._p = paragraph._element = None
 
-def crear_documento(datos_json, imprimir_con_titulos):
+
+def _crear_parrafo_centrado(doc):
+    """Crea un párrafo centrado y sin espacios extra."""
+    p = doc.add_paragraph()
+    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.line_spacing = 1
+    return p
+
+
+def _agregar_campo(doc, clave, valor, imprimir_con_titulos, tamaño_fuente_general):
+    """Agrega un campo en un párrafo independiente."""
+    parrafo = _crear_parrafo_centrado(doc)
+
+    if imprimir_con_titulos:
+        run_clave = parrafo.add_run(f"{clave}: ")
+        run_clave.bold = True
+        run_clave.font.size = tamaño_fuente_general
+
+        run_valor = parrafo.add_run(str(valor))
+        run_valor.font.size = tamaño_fuente_general
+    else:
+        run_valor = parrafo.add_run(str(valor))
+        run_valor.font.size = tamaño_fuente_general
+
+    return parrafo
+
+
+def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
     try:
         # Validación de datos de entrada
         if not datos_json or not isinstance(datos_json, dict):
             raise ValueError("El JSON de entrada no es válido o está vacío")
 
-        # Trabajar con copia para NO mutar el dict original
+        # Copia para no mutar el original
         datos = dict(datos_json)
 
-        # Configuración de rutas robusta
+        # Rutas
         try:
-            ruta_base = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+            try:
+                ruta_base = Path(__file__).parent
+            except NameError:
+                ruta_base = Path.cwd()
+
             ruta_plantilla = (ruta_base / "_internal/plantilla_fija.docx").resolve(strict=True)
             ruta_salida_word = (ruta_base / "sticker_a_imprimir.docx").resolve()
         except FileNotFoundError as e:
@@ -32,11 +92,9 @@ def crear_documento(datos_json, imprimir_con_titulos):
             messagebox.showerror("Error", f"Error configurando rutas: {e}")
             return False
 
-        # Verificar si el archivo de salida está en uso (mejor enfoque para .docx)
-        # Nota: .docx es binario; no usar encoding.
+        # Verificar si el archivo de salida está en uso
         if ruta_salida_word.exists():
             try:
-                # En Windows, renombrar falla si está abierto en Word.
                 tmp = ruta_salida_word.with_suffix(".tmp_check")
                 ruta_salida_word.rename(tmp)
                 tmp.rename(ruta_salida_word)
@@ -50,42 +108,39 @@ def crear_documento(datos_json, imprimir_con_titulos):
         # Cargar plantilla
         doc = Document(ruta_plantilla)
 
-        #  Evitar herencia rara: tamaño de fuente 0 a todo.
+        # Evitar herencia rara: tamaño de fuente 0 a todo
         for paragraph in doc.paragraphs:
             for run in paragraph.runs:
                 run.font.size = Pt(0)
 
-        # Poner márgenes a 0 para evitar herencia de estilos no deseados
+        # Márgenes
         for section in doc.sections:
             section.top_margin = Cm(0)
             section.bottom_margin = Cm(0)
             section.left_margin = Cm(0.4)
             section.right_margin = Cm(0.4)
 
-        # Ajustar márgenes según cantidad de datos (usa copia "datos")
         cantidad_datos = len(datos)
 
-        # Determinar tamaño de página
+        # Tamaño de página
         seccion = doc.sections[0]
         ancho_pagina = seccion.page_width
         alto_pagina = seccion.page_height
 
-        # * --- Ajuste dinámico de márgenes y fuentes según tamaño de página y cantidad de datos ---
+        # Valores por defecto por si la plantilla no cae en ninguna condición
+        tamaño_fuente_nombres = Pt(12)
+        tamaño_fuente_general = Pt(10)
 
         # ----------------------------- Tamaño (8X6) -----------------------------
         if ancho_pagina > Cm(8) and alto_pagina > Cm(6):
-
-            # Ajuste dinámico de márgenes para 8X6 según cantidad de datos
             margen_superior = {
-                1: Cm(2), 2: Cm(1.8), 3: Cm(1.6), 4: Cm(1.4),
-            }.get(cantidad_datos, Cm(1.1)) # * Para +5 elementos
+                1: Cm(2), 2: Cm(0.8), 3: Cm(1.6), 4: Cm(1.4),
+            }.get(cantidad_datos, Cm(1.1))
 
-            # * --- Ajustar márgenes para 8X6 ---
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
 
-            # Ajuste dinámico de tamaños de fuente para 8X6 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(22), Pt(22)),
                 2: (Pt(20), Pt(17)),
@@ -93,7 +148,7 @@ def crear_documento(datos_json, imprimir_con_titulos):
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
             }
-            # * --- Ajustar tamaño de fuente para 8X6 ---
+
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
             else:
@@ -101,26 +156,22 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
         # ----------------------------- Tamaño (10x5) -----------------------------
         elif ancho_pagina > Cm(10) and alto_pagina > Cm(5):
-
-            # Ajuste dinámico de márgenes para 10x5 según cantidad de datos
             margen_superior = {
-                1: Cm(1.6), 2: Cm(1.4), 3: Cm(1.2), 4: Cm(1),
-            }.get(cantidad_datos, Cm(1.1)) # * Para +5 elementos
+                1: Cm(1.6), 2: Cm(0.5), 3: Cm(1.2), 4: Cm(1),
+            }.get(cantidad_datos, Cm(1.1))
 
-            # * --- Ajustar márgenes para 10x5 ---
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
 
-            # Ajuste dinámico de tamaños de fuente para 10x5 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(22), Pt(22)),
-                2: (Pt(20), Pt(17)),
+                2: (Pt(19), Pt(18)),
                 3: (Pt(18), Pt(15)),
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
             }
-            # * --- Ajustar tamaño de fuente para 10x5 ---
+
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
             else:
@@ -128,18 +179,14 @@ def crear_documento(datos_json, imprimir_con_titulos):
 
         # ----------------------------- Tamaño (6x3) -----------------------------
         elif ancho_pagina > Cm(6) and alto_pagina > Cm(3):
-
-            # Ajuste dinámico de márgenes para 6x3 según cantidad de datos
             margen_superior = {
                 1: Cm(0.8), 2: Cm(0.7), 3: Cm(0.6), 4: Cm(0.5),
-            }.get(cantidad_datos, Cm(0.4)) # * Para +5 elementos
+            }.get(cantidad_datos, Cm(0.4))
 
-            # * --- Ajustar márgenes para 6x3 ---
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
 
-            # Ajuste dinámico de tamaños de fuente para 6x3 según cantidad de datos
             ajustes_fuente = {
                 1: (Pt(14), Pt(12)),
                 2: (Pt(13), Pt(11)),
@@ -148,68 +195,67 @@ def crear_documento(datos_json, imprimir_con_titulos):
                 5: (Pt(10), Pt(8)),
             }
 
-            # * --- Ajustar tamaño de fuente para 6x3 ---
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(9), Pt(7))
             else:
                 tamaño_fuente_nombres, tamaño_fuente_general = ajustes_fuente[cantidad_datos]
 
-        # Limpiar párrafos vacíos existentes (sin pelear con el “último párrafo”)
-        # Eliminamos vacíos, pero si el doc quedara sin párrafos, Word igual deja uno.
+        # Limpiar párrafos vacíos de la plantilla
         for p in list(doc.paragraphs):
             if not p.text.strip():
                 _remove_paragraph(p)
 
-        # Procesar campo NOMBRES (sin mutar original)
+        # NOMBRES primero
         nombres = datos.pop("NOMBRES", None)
         if nombres:
-            parrafo_nombres = doc.add_paragraph()
-            parrafo_nombres.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-            parrafo_nombres.paragraph_format.space_before = Pt(0)
-            parrafo_nombres.paragraph_format.space_after = Pt(0)
-
+            parrafo_nombres = _crear_parrafo_centrado(doc)
             run_nombres = parrafo_nombres.add_run(str(nombres))
             run_nombres.font.size = tamaño_fuente_nombres
             run_nombres.font.bold = True
 
-        # Agregar demás campos
-        parrafo = doc.add_paragraph()
-        parrafo.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        formato_parrafo = parrafo.paragraph_format
-        formato_parrafo.space_before = Pt(0)
-        formato_parrafo.space_after = Pt(0)
+        # APELLIDOS y DOCUMENTO primero
+        if "APELLIDOS" in datos:
+            valor = datos.pop("APELLIDOS")
+            _agregar_campo(doc, "APELLIDOS", valor, imprimir_con_titulos, tamaño_fuente_general)
 
-        def agregar_linea(parrafo, clave, valor):
-            if imprimir_con_titulos:
-                run_clave = parrafo.add_run(f"{clave}: ")
-                run_clave.bold = True
-                run_clave.font.size = tamaño_fuente_general
+        parrafo_documento = None
+        if "DOCUMENTO" in datos:
+            valor = datos.pop("DOCUMENTO")
+            parrafo_documento = _agregar_campo(doc, "DOCUMENTO", valor, imprimir_con_titulos, tamaño_fuente_general)
 
-                run_valor = parrafo.add_run(str(valor))
-                run_valor.font.size = tamaño_fuente_general
-            else:
-                run_valor = parrafo.add_run(str(valor))
-                run_valor.font.size = tamaño_fuente_general
+        # QR justo debajo de DOCUMENTO
+        if imprimir_con_qr and ancho_pagina > Cm(8) and alto_pagina > Cm(6):
+            documento_qr = datos_json.get("DOCUMENTO")
+            qr_buffer = crear_qr_buffer(str(documento_qr))
 
-            parrafo.add_run("\n")  # salto de línea controlado
+            parrafo_qr = _crear_parrafo_centrado(doc)
+            run_qr = parrafo_qr.add_run()
+            run_qr.add_picture(qr_buffer, width=Cm(3))
 
-        # Orden específico primero
-        for clave in ["APELLIDOS", "DOCUMENTO"]:
-            if clave in datos:
-                valor = datos.pop(clave)
-                agregar_linea(parrafo, clave, valor)
 
-        # Luego el resto de campos
+        # QR justo debajo de DOCUMENTO
+        if imprimir_con_qr and ancho_pagina > Cm(10) and alto_pagina > Cm(5):
+            documento_qr = datos_json.get("DOCUMENTO")
+            qr_buffer = crear_qr_buffer(str(documento_qr))
+
+            parrafo_qr = _crear_parrafo_centrado(doc)
+            run_qr = parrafo_qr.add_run()
+            run_qr.add_picture(qr_buffer, width=Cm(2.3))
+
+        # Resto de campos
         for clave, valor in datos.items():
-            agregar_linea(parrafo, clave, valor)
+            _agregar_campo(doc, clave, valor, imprimir_con_titulos, tamaño_fuente_general)
 
-        # Limpieza final: si se quedó algún párrafo vacío, lo removemos
-        # (pero si Word lo re-crea, al menos ya no hay \n extra generado por nosotros).
+        # Limpieza final: no borrar párrafos que contengan imagen
         for p in list(doc.paragraphs):
-            if not p.text.strip() and len(doc.paragraphs) > 1:
+            if (
+                not p.text.strip()
+                and not p._element.xpath('.//w:drawing')
+                and len(doc.paragraphs) > 1
+            ):
                 _remove_paragraph(p)
 
-        # Guardar documento con manejo de errores
+        # Guardar documento
         try:
             doc.save(ruta_salida_word)
         except PermissionError:
