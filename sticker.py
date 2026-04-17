@@ -143,7 +143,7 @@ def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
 
             ajustes_fuente = {
                 1: (Pt(22), Pt(22)),
-                2: (Pt(20), Pt(17)),
+                2: (Pt(18), Pt(18)),
                 3: (Pt(18), Pt(15)),
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
@@ -166,7 +166,7 @@ def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
 
             ajustes_fuente = {
                 1: (Pt(22), Pt(22)),
-                2: (Pt(19), Pt(18)),
+                2: (Pt(18), Pt(18)),
                 3: (Pt(18), Pt(15)),
                 4: (Pt(17), Pt(14)),
                 5: (Pt(16), Pt(13)),
