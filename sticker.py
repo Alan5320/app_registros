@@ -67,7 +67,7 @@ def _agregar_campo(doc, clave, valor, imprimir_con_titulos, tamaño_fuente_gener
     return parrafo
 
 
-def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
+def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr, documento_qr):
     try:
         # Validación de datos de entrada
         if not datos_json or not isinstance(datos_json, dict):
@@ -133,21 +133,35 @@ def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
 
         # ----------------------------- Tamaño (8X6) -----------------------------
         if ancho_pagina > Cm(8) and alto_pagina > Cm(6):
-            margen_superior = {
-                1: Cm(2), 2: Cm(0.8), 3: Cm(1.6), 4: Cm(1.4),
-            }.get(cantidad_datos, Cm(1.1))
+
+            if imprimir_con_qr:
+                margen_superior = {
+                    1: Cm(0.8), 2: Cm(0.7), 3: Cm(0.4), 4: Cm(0.3),
+                }.get(cantidad_datos, Cm(0.3))
+
+                ajustes_fuente = {
+                    1: (Pt(22), Pt(22)),
+                    2: (Pt(18), Pt(18)),
+                    3: (Pt(18), Pt(16)),
+                    4: (Pt(17), Pt(14)),
+                    5: (Pt(16), Pt(13)),
+            }
+            else:
+                margen_superior = {
+                    1: Cm(2), 2: Cm(1.8), 3: Cm(1.6), 4: Cm(1.4),
+                }.get(cantidad_datos, Cm(1.1))
+                ajustes_fuente = {
+                    1: (Pt(22), Pt(22)),
+                    2: (Pt(20), Pt(18)),
+                    3: (Pt(18), Pt(15)),
+                    4: (Pt(17), Pt(14)),
+                    5: (Pt(16), Pt(13)),
+                }
 
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
 
-            ajustes_fuente = {
-                1: (Pt(22), Pt(22)),
-                2: (Pt(18), Pt(18)),
-                3: (Pt(18), Pt(15)),
-                4: (Pt(17), Pt(14)),
-                5: (Pt(16), Pt(13)),
-            }
 
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
@@ -156,21 +170,34 @@ def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
 
         # ----------------------------- Tamaño (10x5) -----------------------------
         elif ancho_pagina > Cm(10) and alto_pagina > Cm(5):
-            margen_superior = {
-                1: Cm(1.6), 2: Cm(0.5), 3: Cm(1.2), 4: Cm(1),
-            }.get(cantidad_datos, Cm(1.1))
+
+            if imprimir_con_qr:
+                margen_superior = {
+                    1: Cm(0.7), 2: Cm(0.5), 3: Cm(0.3), 4: Cm(0.3),
+                }.get(cantidad_datos, Cm(0.3))
+
+                ajustes_fuente = {
+                    1: (Pt(22), Pt(22)),
+                    2: (Pt(18), Pt(18)),
+                    3: (Pt(16), Pt(15)),
+                    4: (Pt(15), Pt(14)),
+                    5: (Pt(14), Pt(13)),
+            }
+            else:
+                margen_superior = {
+                    1: Cm(1.6), 2: Cm(1.4), 3: Cm(1.2), 4: Cm(1),
+                }.get(cantidad_datos, Cm(1.1))
+                ajustes_fuente = {
+                    1: (Pt(22), Pt(22)),
+                    2: (Pt(20), Pt(18)),
+                    3: (Pt(18), Pt(15)),
+                    4: (Pt(17), Pt(14)),
+                    5: (Pt(16), Pt(13)),
+                }
 
             for section in doc.sections:
                 section.top_margin = margen_superior
                 section.bottom_margin = Cm(0.2)
-
-            ajustes_fuente = {
-                1: (Pt(22), Pt(22)),
-                2: (Pt(18), Pt(18)),
-                3: (Pt(18), Pt(15)),
-                4: (Pt(17), Pt(14)),
-                5: (Pt(16), Pt(13)),
-            }
 
             if cantidad_datos >= 6:
                 tamaño_fuente_nombres, tamaño_fuente_general = (Pt(15), Pt(11))
@@ -218,33 +245,31 @@ def crear_documento(datos_json, imprimir_con_titulos, imprimir_con_qr=True):
             valor = datos.pop("APELLIDOS")
             _agregar_campo(doc, "APELLIDOS", valor, imprimir_con_titulos, tamaño_fuente_general)
 
-        parrafo_documento = None
         if "DOCUMENTO" in datos:
             valor = datos.pop("DOCUMENTO")
-            parrafo_documento = _agregar_campo(doc, "DOCUMENTO", valor, imprimir_con_titulos, tamaño_fuente_general)
+            _agregar_campo(doc, "DOCUMENTO", valor, imprimir_con_titulos, tamaño_fuente_general)
+
+        # Resto de campos
+        for clave, valor in datos.items():
+            _agregar_campo(doc, clave, valor, imprimir_con_titulos, tamaño_fuente_general)
 
         # QR justo debajo de DOCUMENTO
         if imprimir_con_qr and ancho_pagina > Cm(8) and alto_pagina > Cm(6):
-            documento_qr = datos_json.get("DOCUMENTO")
             qr_buffer = crear_qr_buffer(str(documento_qr))
 
             parrafo_qr = _crear_parrafo_centrado(doc)
             run_qr = parrafo_qr.add_run()
-            run_qr.add_picture(qr_buffer, width=Cm(3))
+            run_qr.add_picture(qr_buffer, width=Cm(2.5))
 
 
         # QR justo debajo de DOCUMENTO
         if imprimir_con_qr and ancho_pagina > Cm(10) and alto_pagina > Cm(5):
-            documento_qr = datos_json.get("DOCUMENTO")
             qr_buffer = crear_qr_buffer(str(documento_qr))
 
             parrafo_qr = _crear_parrafo_centrado(doc)
             run_qr = parrafo_qr.add_run()
             run_qr.add_picture(qr_buffer, width=Cm(2.3))
 
-        # Resto de campos
-        for clave, valor in datos.items():
-            _agregar_campo(doc, clave, valor, imprimir_con_titulos, tamaño_fuente_general)
 
         # Limpieza final: no borrar párrafos que contengan imagen
         for p in list(doc.paragraphs):

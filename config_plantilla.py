@@ -32,6 +32,7 @@ class ConfiguradorPlantilla:
 
         # ✅ Crear variables Tk DESPUÉS de tener root
         self.imprimir_con_titulos_var = tk.BooleanVar(master=self.ventana, value=True)
+        self.imprimir_con_qr_var = tk.BooleanVar(master=self.ventana, value=True)
 
         try:
             self.ventana.iconbitmap("_internal/logo2.ico")
@@ -79,6 +80,23 @@ class ConfiguradorPlantilla:
             text="Sí, incluir títulos",
             variable=self.imprimir_con_titulos_var,
         ).pack(anchor="w", pady=5)
+
+        # ✅ Selector QR
+        qr_frame = ttk.Frame(main_frame)
+        qr_frame.pack(fill="x", pady=(0, 10))
+
+        ttk.Label(
+            qr_frame,
+            text="¿Desea imprimir con codigo QR en el sticker?",
+            font=("Segoe UI", 12)
+        ).pack(anchor="w")
+
+        ttk.Checkbutton(
+            qr_frame,
+            text="Sí, incluir QR",
+            variable=self.imprimir_con_qr_var,
+        ).pack(anchor="w", pady=5)
+
 
         # Contenedor principal de campos
         campos_frame = ttk.Frame(main_frame)
@@ -151,6 +169,7 @@ class ConfiguradorPlantilla:
             return
 
         imprimir_con_titulos = self.imprimir_con_titulos_var.get()
+        imprimir_con_qr = self.imprimir_con_qr_var.get()
 
         self.ventana.destroy()
         DynamicWindow(
@@ -159,5 +178,6 @@ class ConfiguradorPlantilla:
             campos_plantilla,
             self.path_database,
             self.evento_nombre,
-            imprimir_con_titulos  # ✅ nuevo parámetro
+            imprimir_con_titulos,
+            imprimir_con_qr,
         )
